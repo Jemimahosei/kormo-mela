@@ -24,7 +24,6 @@ services:
   - type: web
     name: kormo-mela-frontend
     env: static
-    region: oregon
     buildCommand: cd web && npm install && npm run build
     staticPublishPath: web/dist
     envVars:
