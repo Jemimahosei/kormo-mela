@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: kormo-mela-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python manage.py migrate && python manage.py seed_demo && gunicorn kormomela.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "*"
+      - key: DJANGO_CORS_ALLOW_ALL
+        value: "1"
+      # Set by hand in the Render dashboard (never committed). When set, the
+      # backend uses Postgres; when unset it uses SQLite (ephemeral on Render
+      # — data resets on redeploy, fine for a demo, not for real users).
+      - key: DATABASE_URL
+        sync: false
+
+  - type: web
+    name: kormo-mela-frontend
+    env: static
+    region: oregon
+    buildCommand: cd web && npm install && npm run build
+    staticPublishPath: web/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # NOTE: Render may suffix the backend URL (e.g. -0l4v) if the plain name
+      # is taken. After the first deploy, check the real backend URL and
+      # update this value + redeploy the frontend if it differs.
+      - key: VITE_API_URL
+        value: https://kormo-mela-backend.onrender.com/api
